@@ -35,4 +35,10 @@ let set_state state =
   pos := p
 
 (** Initialise the generator, using the argument as a seed. *)
-let init = Random.init
+let init seed =
+  Random.init seed;
+  buffer := 0;
+  pos := 0
+
+(** Same as {!Random.float}. *)
+let float = Random.float
