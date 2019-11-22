@@ -1,3 +1,9 @@
 (executable
  (name bench)
+ (modules Bench)
+ (libraries boltzexp))
+
+(executable
+ (name benchbool)
+ (modules Benchbool)
  (libraries boltzexp))
