@@ -12,3 +12,8 @@
  (name benchgeom)
  (modules Benchgeom)
  (libraries boltzexp))
+
+(executable
+ (name bernoulli)
+ (modules Bernoulli)
+ (libraries boltzexp))
