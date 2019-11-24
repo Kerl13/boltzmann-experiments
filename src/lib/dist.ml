@@ -25,4 +25,14 @@ module Bernoulli = struct
         else aux s x
     in
     aux 0. 1.
+
+  let rec special3 () =
+    let b1 = Rand.bool () in
+    let b2 = Rand.bool () in
+    if b1 then b2
+    else if b2 then false
+    else special3 ()
+
+  let special4 () =
+    Rand.bool () && Rand.bool ()
 end

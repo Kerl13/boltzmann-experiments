@@ -17,6 +17,10 @@ let benchall bencher n generators =
   Format.printf "name:ns/call:slowdown@.";
   List.iter print results
 
+let cons_if b x xs =
+  if b then x :: xs
+  else xs
+
 let () =
   let n = int_of_string Sys.argv.(1) in
   let param = float_of_string Sys.argv.(2) in
@@ -24,4 +28,14 @@ let () =
     "naive", (fun () -> Dist.Bernoulli.naive param);
     "bit-optimal", (fun () -> Dist.Bernoulli.bit_optimal param);
   ] in
+  let generators = cons_if
+    (param = 0.333333333333333315)
+    ("special3", Dist.Bernoulli.special3)
+    generators
+  in
+  let generators = cons_if
+    (param = 0.25)
+    ("special4", Dist.Bernoulli.special4)
+    generators
+  in
   benchall Benchtools.gen_n_times n generators;
