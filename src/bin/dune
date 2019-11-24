@@ -1,16 +1,16 @@
 (executable
- (name bench)
- (modules Bench)
+ (name binsize)
+ (modules Binsize)
  (libraries boltzexp))
 
 (executable
- (name benchbool)
- (modules Benchbool)
+ (name bool)
+ (modules Bool)
  (libraries boltzexp))
 
 (executable
- (name benchgeom)
- (modules Benchgeom)
+ (name geom)
+ (modules Geom)
  (libraries boltzexp))
 
 (executable
