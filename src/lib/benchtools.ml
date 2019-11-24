@@ -10,3 +10,12 @@ let cumul_until ~target size_generator =
     else loop (acc + size_generator ())
   in
   loop 0
+
+let gen_n_times n generator =
+  let rec aux n =
+    if n = 0 then ()
+    else
+      let _ = generator () in
+      aux (n - 1)
+  in
+  aux n

@@ -7,3 +7,8 @@
  (name benchbool)
  (modules Benchbool)
  (libraries boltzexp))
+
+(executable
+ (name benchgeom)
+ (modules Benchgeom)
+ (libraries boltzexp))
