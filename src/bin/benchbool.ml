@@ -30,12 +30,12 @@ let benchall bencher n generators =
     |> List.sort (fun x y -> Float.compare (snd x) (snd y))
   in
   let _, r0 = List.hd results in
-  let print (name, r) = Format.printf "%s:%F:%F@." name r (r /. r0) in
+  let print (name, r) = Format.printf "%s:%F:%.3fx@." name r (r /. r0) in
   Format.printf "name:ns/bit:slowdown@.";
   List.iter print results
 
 let () =
-  let n = 100_000_000 in
+  let n = 50_000_000 in
   let generators = [
     "bit-optimal", Rand.bool;
     "ocaml", Random.bool;
