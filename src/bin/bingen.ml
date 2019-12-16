@@ -134,6 +134,22 @@ let arbogen =
   (fun () -> free_size grammar Rand.bool),
   (fun () -> ignore (free_gen grammar Rand.bool))
 
+let arbogen_alt =
+  let open Implementations.ArbogenAlt in
+  let grammar = Expr.(
+    Union (Epsilon, Product (Z, Product (Ref 0, Ref 0)))
+  ) in
+  (fun () -> free_size grammar Rand.bool),
+  (fun () -> ignore (free_gen grammar Rand.bool))
+
+let arbogen_alt_2 =
+  let open Implementations.ArbogenAlt2 in
+  let grammar = Expr.(
+    Union (Epsilon, Product (Z, Product (Ref 0, Ref 0)))
+  ) in
+  (fun () -> free_size grammar Rand.bool),
+  (fun () -> ignore (free_gen grammar Rand.bool))
+
 let gadt =
   let open Implementations.Gadt in
   let grammar = Expr.(
@@ -154,6 +170,8 @@ let () =
     "ad-hoc", ad_hoc;
     "ad-hoc-gadt", ad_hoc_gadt;
     "arbogen", arbogen;
+    "arbogen-alt", arbogen_alt;
+    "arbogen-alt-2", arbogen_alt_2;
     "gadt", gadt;
   ] in
   benchall samplers
