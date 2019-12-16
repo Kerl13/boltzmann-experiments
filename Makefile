@@ -1,4 +1,4 @@
-builder:
+build:
 	dune build src/bin/binsize.exe
 	dune build src/bin/bingen.exe
 	dune build src/bin/bool.exe
