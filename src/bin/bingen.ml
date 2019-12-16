@@ -2,18 +2,18 @@ let size_min = 100_000
 let size_max = 200_000
 let nb_generations = 10
 
-let rec search free_size =
+let rec search ~size_min ~size_max free_size =
   let state = Rand.get_state () in
   let size = free_size () in
   if size < size_min || size > size_max then
-    search free_size
+    search ~size_min ~size_max free_size
   else
     (size, state)
 
 let rec search_states free_size n =
   if n = 0 then []
   else
-    search free_size :: search_states free_size (n - 1)
+    search ~size_min ~size_max free_size :: search_states free_size (n - 1)
 
 module BinTree = struct
   type t = Leaf | Node of t * t
@@ -145,7 +145,7 @@ let gadt =
   in
   run
 
-let main () =
+let benchmark () =
   Rand.init 41329213424289;
 
   let sizes, states =
@@ -182,4 +182,24 @@ let main () =
   let samples =Benchmark.latencyN ~repeat:7 9L samplers in
   Benchmark.tabulate samples
 
-let () = main ()
+let micro_benchmark () =
+  let open Core_bench.Std in
+  let generators = [
+    "ad-hoc", ad_hoc;
+    "ad-hoc-gadt", ad_hoc_gadt;
+    "arbogen", arbogen;
+    "arbogen-alt", arbogen_alt;
+    "arbogen-alt-2", arbogen_alt_2;
+    "gadt", gadt;
+  ] in
+  let _, state = search ~size_min:300 ~size_max:300 AdHoc.free_size in
+  Gc.compact();
+  let tests =
+    List.map
+      (fun (name, gen) ->
+        Bench.Test.create ~name (fun () -> Rand.set_state state; gen ()))
+      generators
+  in
+  Core.Command.run (Bench.make_command tests)
+
+let () = micro_benchmark ()
