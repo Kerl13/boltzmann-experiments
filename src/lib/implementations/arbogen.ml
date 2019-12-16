@@ -58,7 +58,8 @@ let free_gen grammar rand_bool =
     | Gen Epsilon :: next -> loop generated next
     | Gen Z :: next -> loop generated next
     | Gen (Union (e1, e2)) :: next ->
-      if rand_bool () (* XXX. *) then
+      if rand_bool () (* XXX. *)
+      then
         loop generated (Gen e1 :: next)
       else
         loop generated (Gen e2 :: next)

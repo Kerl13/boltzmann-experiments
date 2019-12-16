@@ -19,7 +19,7 @@ type expr_list =
   | [] : expr_list
   | (::) : _ Expr.t * expr_list -> expr_list
 
-let free_size grammar rand_bool =
+let free_size grammar =
   let open Expr in
   let rec loop size = function
     | [] -> size
@@ -28,7 +28,7 @@ let free_size grammar rand_bool =
     | Z :: next -> loop (size + 1) next
     | Ref _ :: next -> loop size (grammar :: next)
     | Union (e1, e2) :: next ->
-      if rand_bool () (* XXX. *)
+      if Rand.bool () (* XXX. *)
       then loop size (e1 :: next)
       else loop size (e2 :: next)
     | Product (e1, e2) :: next -> loop size (e2 :: e1 :: next)
@@ -60,7 +60,7 @@ type (_, _, _) task =
   | WrapR: ('a, (_, 'b) either * 's, 't) task -> ('a, 'b * 's, 't) task
   | Pair: ('a, ('b * 'c) * 's, 't) task -> ('a, 'b * ('c * 's), 't) task
 
-let free_gen (type a b) (expr: (a, b) Expr.t) (builder: b -> a) rand_bool : a =
+let free_gen (type a b) (expr: (a, b) Expr.t) (builder: b -> a) : a =
   let rec loop: type s t. s Stack.t -> (a, s, a * t) task -> a
   = fun generated task -> match task with
     | Noop -> Stack.head generated
@@ -69,10 +69,9 @@ let free_gen (type a b) (expr: (a, b) Expr.t) (builder: b -> a) rand_bool : a =
     | Gen (Z, next) -> loop (Stack.push () generated) next
     | Gen (Ref _, next) -> loop generated (Gen (expr, Build (builder, next)))
     | Gen (Union (e1, e2), next) ->
-      if rand_bool () (* XXX. *) then
-        loop generated (Gen (e1, WrapL next))
-      else
-        loop generated (Gen (e2, WrapR next))
+      if Rand.bool () (* XXX. *)
+      then loop generated (Gen (e1, WrapL next))
+      else loop generated (Gen (e2, WrapR next))
     | Gen (Product (e1, e2), next) ->
       loop generated (Gen (e2, Gen (e1, Pair next)))
 

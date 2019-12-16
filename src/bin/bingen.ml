@@ -1,8 +1,6 @@
-open Boltzexp
-
-let size_min = 500_000
-let size_max = 1_000_000
-let nb_generations = 5
+let size_min = 100_000
+let size_max = 200_000
+let nb_generations = 10
 
 let rec search free_size =
   let state = Rand.get_state () in
@@ -12,40 +10,10 @@ let rec search free_size =
   else
     (size, state)
 
-let once free_size free_gen =
-  let size, state = search free_size in
-  Rand.set_state state;
-  let _, t = Benchtools.time free_gen in
-  size, t
-
-let do_n_sum thunk =
-  let rec loop size t n =
-    if n = 0 then (size, t)
-    else
-      let s, t' = thunk () in
-      loop (s + size) (t +. t') (n - 1)
-  in
-  loop 0 0.
-
-let bench (free_size, free_gen) =
-  let state = Rand.get_state () in
-  let res = do_n_sum (fun () -> once free_size free_gen) nb_generations in
-  Rand.set_state state;
-  res
-
-let benchall l =
-  let l =
-    l
-    |> List.map (fun (name, g) -> (name, bench g))
-    |> List.map (fun (name, (size, t)) -> name, size, (t /. float_of_int size) *. 1e9)
-    |> List.sort (fun (_, _, r1) (_, _, r2) -> Float.compare r1 r2)
-  in
-  let _, _, r0 = List.hd l in
-  Format.printf "generator:# of nodes:ns/node:slowdown@.";
-  let print_res (name, size, r) =
-    Format.printf "%s:%d:%.3f:%.3fx@." name size r (r /. r0)
-  in
-  List.iter print_res l
+let rec search_states free_size n =
+  if n = 0 then []
+  else
+    search free_size :: search_states free_size (n - 1)
 
 module BinTree = struct
   type t = Leaf | Node of t * t
@@ -120,35 +88,46 @@ module AdHocGadt = struct
     fun () -> aux [] (Gen Nil)
 end
 
-let ad_hoc =
-  AdHoc.free_size, (fun () -> ignore (AdHoc.free_gen ()))
+let ad_hoc () =
+  let t = Sys.opaque_identity (AdHoc.free_gen ()) in
+  ignore t
 
-let ad_hoc_gadt =
-  AdHocGadt.free_size, (fun () -> ignore (AdHoc.free_gen ()))
+let ad_hoc_gadt () =
+  let t = Sys.opaque_identity (AdHoc.free_gen ()) in
+  ignore t
 
 let arbogen =
   let open Implementations.Arbogen in
   let grammar = Expr.(
     Union (Epsilon, Product (Z, Product (Ref 0, Ref 0)))
   ) in
-  (fun () -> free_size grammar Rand.bool),
-  (fun () -> ignore (free_gen grammar Rand.bool))
+  let run () =
+    let t = Sys.opaque_identity (free_gen grammar Rand.bool) in
+    ignore t
+  in
+  run
 
 let arbogen_alt =
   let open Implementations.ArbogenAlt in
   let grammar = Expr.(
     Union (Epsilon, Product (Z, Product (Ref 0, Ref 0)))
   ) in
-  (fun () -> free_size grammar Rand.bool),
-  (fun () -> ignore (free_gen grammar Rand.bool))
+  let run () =
+    let t = Sys.opaque_identity (free_gen grammar) in
+    ignore t
+  in
+  run
 
 let arbogen_alt_2 =
   let open Implementations.ArbogenAlt2 in
   let grammar = Expr.(
     Union (Epsilon, Product (Z, Product (Ref 0, Ref 0)))
   ) in
-  (fun () -> free_size grammar Rand.bool),
-  (fun () -> ignore (free_gen grammar Rand.bool))
+  let run () =
+    let t = Sys.opaque_identity (free_gen grammar Rand.bool) in
+    ignore t
+  in
+  run
 
 let gadt =
   let open Implementations.Gadt in
@@ -160,13 +139,38 @@ let gadt =
       (fun () -> BinTree.Leaf)
       (fun (_, (l, r)) -> BinTree.Node (l, r))
   in
-  (fun () -> free_size grammar Rand.bool),
-  (fun () -> ignore (free_gen grammar builder Rand.bool))
+  let run () =
+    let t = Sys.opaque_identity (free_gen grammar builder) in
+    ignore t
+  in
+  run
 
-let () =
+let main () =
   Rand.init 41329213424289;
 
-  let samplers = [
+  let sizes, states =
+    search_states AdHoc.free_size nb_generations 
+    |> List.split
+  in
+  Format.printf
+    "sizes: [%a]@."
+    (Format.pp_print_list
+      ~pp_sep:(fun fmt () -> Format.fprintf fmt ", ")
+      Format.pp_print_int)
+    sizes;
+
+  let make_test (name, free_gen) =
+    let run () =
+      List.iter
+        (fun state ->
+          Rand.set_state state;
+          free_gen ())
+        states
+    in
+    (name, run, ())
+  in
+
+  let samplers = List.map make_test [
     "ad-hoc", ad_hoc;
     "ad-hoc-gadt", ad_hoc_gadt;
     "arbogen", arbogen;
@@ -174,4 +178,8 @@ let () =
     "arbogen-alt-2", arbogen_alt_2;
     "gadt", gadt;
   ] in
-  benchall samplers
+
+  let samples =Benchmark.latencyN ~repeat:7 9L samplers in
+  Benchmark.tabulate samples
+
+let () = main ()

@@ -1,3 +1,8 @@
 (library
  (name boltzexp)
- (libraries unix implementations))
+ (libraries unix implementations)
+ (modules :standard \ Rand))
+
+(library
+ (name rand)
+ (modules Rand))

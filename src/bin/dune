@@ -6,7 +6,7 @@
 (executable
  (name bingen)
  (modules Bingen)
- (libraries boltzexp))
+ (libraries boltzexp benchmark))
 
 (executable
  (name bool)

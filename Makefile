@@ -6,7 +6,7 @@ build:
 	dune build src/bin/bernoulli.exe
 
 bingen:
-	dune exec src/bin/bingen.exe | column -ts :
+	dune exec src/bin/bingen.exe
 
 binsize:
 	dune exec src/bin/binsize.exe | column -ts :
