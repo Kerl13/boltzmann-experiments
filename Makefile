@@ -1,3 +1,13 @@
+builder:
+	dune build src/bin/binsize.exe
+	dune build src/bin/bingen.exe
+	dune build src/bin/bool.exe
+	dune build src/bin/geom.exe
+	dune build src/bin/bernoulli.exe
+
+bingen:
+	dune exec src/bin/bingen.exe | column -ts :
+
 binsize:
 	dune exec src/bin/binsize.exe | column -ts :
 

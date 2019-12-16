@@ -28,16 +28,26 @@ let combine rand_bool sampler =
   let rand_bool_name, rand_bool = rand_bool in
   sampler_name, rand_bool_name, (fun () -> sampler rand_bool)
 
+(** Optimal generator? Runs in constant space. *)
+let constant_space rand_bool =
+  let rec aux size todo =
+    if todo = 0 then size
+    else if rand_bool () then aux size (todo - 1)
+    else aux (size + 1) (todo + 1)
+  in
+  aux 0 1
+
+let arbogen =
+  let open Implementations.Arbogen in
+  let grammar = Expr.(Union (Epsilon, Product (Z, Product (Ref 0, Ref 0)))) in
+  free_size grammar
+
 let () =
   Rand.init 41329213424289;
-  let open Bintree in
 
   let samplers = [
-    "constant space", ConstantSpace.free_size;
-    (* "stack-based", StackBased.free_size; *)
-    (* "gadt-stack", Gadt.free_size; *)
-    (* "generic", Generic.free_size; *)
-    "arbogen", Arbogen.free_size;
+    "constant space", constant_space;
+    "arbogen", arbogen;
   ] in
   let bool_samplers = [
     "float", (fun () -> Rand.float 1. < 0.5);

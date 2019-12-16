@@ -4,6 +4,11 @@
  (libraries boltzexp))
 
 (executable
+ (name bingen)
+ (modules Bingen)
+ (libraries boltzexp))
+
+(executable
  (name bool)
  (modules Bool)
  (libraries boltzexp))
